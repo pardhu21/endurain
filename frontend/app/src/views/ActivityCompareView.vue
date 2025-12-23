@@ -326,6 +326,7 @@ const alertPrivacyMessage = ref(null)
 const isHiddenMessage = ref(null)
 
 const activityId = route.params.id1
+
 const compareActivityId = route.params.id2
 
 onMounted(async () => {
