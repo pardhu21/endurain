@@ -176,7 +176,7 @@ function selectActivity(id) {
 }
 
 function confirmCompare() {
-  router.push(`/compare/${selectedActivityId.value}`)
+  router.push(`/activity-compare/${props.activity.id}/${selectedActivityId.value}`)
 }
 
 onMounted(async () => {
