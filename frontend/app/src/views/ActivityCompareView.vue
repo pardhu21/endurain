@@ -1,276 +1,133 @@
 <template>
-  <div class="d-flex">
-    <div
-      class="bg-body-tertiary rounded p-3 shadow-sm flex-fill"
-      :class="{ 'border border-warning border-2': activity?.is_hidden }"
-    >
-      <LoadingComponent v-if="isLoading" />
+  <div
+    class="bg-body-tertiary rounded p-3 shadow-sm flex-fill"
+    :class="{ 'border border-warning border-2': activity?.is_hidden }"
+  >
+    <LoadingComponent v-if="isLoading" />
 
-      <div v-else>
-        <ActivitySummaryComponent
-          v-if="activity"
-          :activity="activity"
-          :source="'activity'"
-          @activityEditedFields="updateActivityFieldsOnEdit"
-          @activityNewActivityMedia="addMediaToActivity"
-          :units="units"
-        />
-        <AlertComponent
-          v-if="activity && activity.user_id === authStore.user.id && activity.is_hidden"
-          :message="isHiddenMessage"
-          :dismissible="true"
-          :type="'warning'"
-          class="mt-2"
-        />
-        <AlertComponent
-          v-if="
-            activity &&
-            activity.user_id === authStore.user.id &&
-            (activity.hide_start_time ||
-              activity.hide_location ||
-              activity.hide_map ||
-              activity.hide_hr ||
-              activity.hide_power ||
-              activity.hide_cadence ||
-              activity.hide_elevation ||
-              activity.hide_speed ||
-              activity.hide_pace ||
-              activity.hide_laps ||
-              activity.hide_workout_sets_steps)
-          "
-          :message="alertPrivacyMessage"
-          :dismissible="true"
-          class="mt-2"
-        />
-      </div>
-
-      <!-- map zone -->
-      <div class="mt-3 mb-3" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="mt-3 mb-3"
-        v-else-if="
-          activity &&
-          ((authStore.isAuthenticated && authStore.user.id === activity.user_id) ||
-            (authStore.isAuthenticated &&
-              authStore.user.id !== activity.user_id &&
-              activity.hide_map === false) ||
-            (!authStore.isAuthenticated && activity.hide_map === false))
-        "
-      >
-        <ActivityMapComponent
-          :activity="activity"
-          :activityActivityMedia="activityActivityMedia"
-          :source="'activity'"
-          @activityMediaDeleted="removeMediaFromActivity"
-        />
-      </div>
-
-      <!-- graphs -->
-      <hr
-        class="mb-2 mt-2"
+    <div v-else>
+      <ActivityCompareSummaryComponent
+        v-if="activity"
+        :activity="activity"
+        :comparedActivity="comparedActivity"
+        :source="'activity'"
+        :units="units"
+      />
+      <AlertComponent
+        v-if="activity && activity.user_id === authStore.user.id && activity.is_hidden"
+        :message="isHiddenMessage"
+        :dismissible="true"
+        :type="'warning'"
+        class="mt-2"
+      />
+      <AlertComponent
         v-if="
           activity &&
-          ((activityActivityLaps && activityActivityLaps.length > 0) ||
-            (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
-            (activityActivitySets && activityActivitySets.length > 0) ||
-            (activityActivityStreams && activityActivityStreams.length > 0))
+          activity.user_id === authStore.user.id &&
+          (activity.hide_start_time ||
+            activity.hide_location ||
+            activity.hide_map ||
+            activity.hide_hr ||
+            activity.hide_power ||
+            activity.hide_cadence ||
+            activity.hide_elevation ||
+            activity.hide_speed ||
+            activity.hide_pace ||
+            activity.hide_laps ||
+            activity.hide_workout_sets_steps)
         "
+        :message="alertPrivacyMessage"
+        :dismissible="true"
+        class="mt-2"
       />
+    </div>
 
-      <!-- graphs and laps medium and above screens -->
-      <div class="d-none d-lg-block" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="d-none d-lg-block"
-        v-else-if="
-          activity &&
-          ((activityActivityLaps && activityActivityLaps.length > 0) ||
-            (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
-            (activityActivitySets && activityActivitySets.length > 0) ||
-            (activityActivityStreams && activityActivityStreams.length > 0))
-        "
-      >
-        <ActivityMandAbovePillsComponent
-          :activity="activity"
-          :activityActivityLaps="activityActivityLaps"
-          :activityActivityWorkoutSteps="activityActivityWorkoutSteps"
-          :activityActivityStreams="activityActivityStreams"
-          :units="units"
-          :activityActivityExerciseTitles="activityActivityExerciseTitles"
-          :activityActivitySets="activityActivitySets"
-        />
-      </div>
-
-      <!-- graphs and laps screens bellow medium -->
-      <div class="d-lg-none d-block" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="d-lg-none d-block"
-        v-else-if="
-          activity &&
-          ((activityActivityLaps && activityActivityLaps.length > 0) ||
-            (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
-            (activityActivitySets && activityActivitySets.length > 0) ||
-            (activityActivityStreams && activityActivityStreams.length > 0))
-        "
-      >
-        <ActivityBellowMPillsComponent
-          :activity="activity"
-          :activityActivityLaps="activityActivityLaps"
-          :activityActivityWorkoutSteps="activityActivityWorkoutSteps"
-          :activityActivityStreams="activityActivityStreams"
-          :units="units"
-          :activityActivityExerciseTitles="activityActivityExerciseTitles"
-          :activityActivitySets="activityActivitySets"
-        />
-      </div>
-
-      <!-- back button -->
-      <BackButtonComponent />
+    <!-- map zone -->
+    <div class="mt-3 mb-3" v-if="isLoading">
+      <LoadingComponent />
     </div>
     <div
-      class="bg-body-tertiary rounded p-3 shadow-sm flex-fill"
-      :class="{ 'border border-warning border-2': comparedActivity?.is_hidden }"
+      class="mt-3 mb-3"
+      v-else-if="
+        activity &&
+        ((authStore.isAuthenticated && authStore.user.id === activity.user_id) ||
+          (authStore.isAuthenticated &&
+            authStore.user.id !== activity.user_id &&
+            activity.hide_map === false) ||
+          (!authStore.isAuthenticated && activity.hide_map === false))
+      "
     >
-      <LoadingComponent v-if="isLoading" />
-
-      <div v-else>
-        <ActivitySummaryComponent
-          v-if="comparedActivity"
-          :activity="comparedActivity"
-          :source="'activity'"
-          @activityEditedFields="updateActivityFieldsOnEdit"
-          @activityNewActivityMedia="addMediaToActivity"
-          :units="units"
-        />
-        <AlertComponent
-          v-if="
-            comparedActivity &&
-            comparedActivity.user_id === authStore.user.id &&
-            comparedActivity.is_hidden
-          "
-          :message="isHiddenMessage"
-          :dismissible="true"
-          :type="'warning'"
-          class="mt-2"
-        />
-        <AlertComponent
-          v-if="
-            comparedActivity &&
-            comparedActivity.user_id === authStore.user.id &&
-            (comparedActivity.hide_start_time ||
-              comparedActivity.hide_location ||
-              comparedActivity.hide_map ||
-              comparedActivity.hide_hr ||
-              comparedActivity.hide_power ||
-              comparedActivity.hide_cadence ||
-              comparedActivity.hide_elevation ||
-              comparedActivity.hide_speed ||
-              comparedActivity.hide_pace ||
-              comparedActivity.hide_laps ||
-              comparedActivity.hide_workout_sets_steps)
-          "
-          :message="alertPrivacyMessage"
-          :dismissible="true"
-          class="mt-2"
-        />
-      </div>
-
-      <!-- map zone -->
-      <div class="mt-3 mb-3" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="mt-3 mb-3"
-        v-else-if="
-          comparedActivity &&
-          ((authStore.isAuthenticated && authStore.user.id === comparedActivity.user_id) ||
-            (authStore.isAuthenticated &&
-              authStore.user.id !== comparedActivity.user_id &&
-              comparedActivity.hide_map === false) ||
-            (!authStore.isAuthenticated && comparedActivity.hide_map === false))
-        "
-      >
-        <ActivityMapComponent
-          :activity="comparedActivity"
-          :activityActivityMedia="comparedActivityActivityMedia"
-          :source="'activity'"
-          @activityMediaDeleted="removeMediaFromActivity"
-        />
-      </div>
-
-      <!-- graphs -->
-      <hr
-        class="mb-2 mt-2"
-        v-if="
-          comparedActivity &&
-          ((comparedActivityActivityLaps && comparedActivityActivityLaps.length > 0) ||
-            (comparedActivityActivityWorkoutSteps &&
-              comparedActivityActivityWorkoutSteps.length > 0) ||
-            (comparedActivityActivitySets && comparedActivityActivitySets.length > 0) ||
-            (comparedActivityActivityStreams && comparedActivityActivityStreams.length > 0))
-        "
+      <ActivityMapCompareComponent
+        :activity="activity"
+        :comparedActivity="comparedActivity"
+        source="activity"
       />
-
-      <!-- graphs and laps medium and above screens -->
-      <div class="d-none d-lg-block" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="d-none d-lg-block"
-        v-else-if="
-          comparedActivity &&
-          ((comparedActivityActivityLaps && comparedActivityActivityLaps.length > 0) ||
-            (comparedActivityActivityWorkoutSteps &&
-              comparedActivityActivityWorkoutSteps.length > 0) ||
-            (comparedActivityActivitySets && comparedActivityActivitySets.length > 0) ||
-            (comparedActivityActivityStreams && comparedActivityActivityStreams.length > 0))
-        "
-      >
-        <ActivityMandAbovePillsComponent
-          :activity="comparedActivity"
-          :activityActivityLaps="comparedActivityActivityLaps"
-          :activityActivityWorkoutSteps="comparedActivityActivityWorkoutSteps"
-          :activityActivityStreams="comparedActivityActivityStreams"
-          :units="units"
-          :activityActivityExerciseTitles="comparedActivityActivityExerciseTitles"
-          :activityActivitySets="comparedActivityActivitySets"
-        />
-      </div>
-
-      <!-- graphs and laps screens bellow medium -->
-      <div class="d-lg-none d-block" v-if="isLoading">
-        <LoadingComponent />
-      </div>
-      <div
-        class="d-lg-none d-block"
-        v-else-if="
-          comparedActivity &&
-          ((comparedActivityActivityLaps && comparedActivityActivityLaps.length > 0) ||
-            (comparedActivityActivityWorkoutSteps &&
-              comparedActivityActivityWorkoutSteps.length > 0) ||
-            (comparedActivityActivitySets && comparedActivityActivitySets.length > 0) ||
-            (comparedActivityActivityStreams && comparedActivityActivityStreams.length > 0))
-        "
-      >
-        <ActivityBellowMPillsComponent
-          :activity="comparedActivity"
-          :activityActivityLaps="comparedActivityActivityLaps"
-          :activityActivityWorkoutSteps="comparedActivityActivityWorkoutSteps"
-          :activityActivityStreams="comparedActivityActivityStreams"
-          :units="units"
-          :activityActivityExerciseTitles="comparedActivityActivityExerciseTitles"
-          :activityActivitySets="comparedActivityActivitySets"
-        />
-      </div>
-
-      <!-- back button -->
-      <BackButtonComponent />
     </div>
+
+    <!-- graphs -->
+    <hr
+      class="mb-2 mt-2"
+      v-if="
+        activity &&
+        ((activityActivityLaps && activityActivityLaps.length > 0) ||
+          (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
+          (activityActivitySets && activityActivitySets.length > 0) ||
+          (activityActivityStreams && activityActivityStreams.length > 0))
+      "
+    />
+
+    <!-- graphs and laps medium and above screens -->
+    <div class="d-none d-lg-block" v-if="isLoading">
+      <LoadingComponent />
+    </div>
+    <div
+      class="d-none d-lg-block"
+      v-else-if="
+        activity &&
+        ((activityActivityLaps && activityActivityLaps.length > 0) ||
+          (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
+          (activityActivitySets && activityActivitySets.length > 0) ||
+          (activityActivityStreams && activityActivityStreams.length > 0))
+      "
+    >
+      <ActivityMandAbovePillsComponent
+        :activity="activity"
+        :activityActivityLaps="activityActivityLaps"
+        :activityActivityWorkoutSteps="activityActivityWorkoutSteps"
+        :activityActivityStreams="activityActivityStreams"
+        :units="units"
+        :activityActivityExerciseTitles="activityActivityExerciseTitles"
+        :activityActivitySets="activityActivitySets"
+      />
+    </div>
+
+    <!-- graphs and laps screens bellow medium -->
+    <div class="d-lg-none d-block" v-if="isLoading">
+      <LoadingComponent />
+    </div>
+    <div
+      class="d-lg-none d-block"
+      v-else-if="
+        activity &&
+        ((activityActivityLaps && activityActivityLaps.length > 0) ||
+          (activityActivityWorkoutSteps && activityActivityWorkoutSteps.length > 0) ||
+          (activityActivitySets && activityActivitySets.length > 0) ||
+          (activityActivityStreams && activityActivityStreams.length > 0))
+      "
+    >
+      <ActivityBellowMPillsComponent
+        :activity="activity"
+        :activityActivityLaps="activityActivityLaps"
+        :activityActivityWorkoutSteps="activityActivityWorkoutSteps"
+        :activityActivityStreams="activityActivityStreams"
+        :units="units"
+        :activityActivityExerciseTitles="activityActivityExerciseTitles"
+        :activityActivitySets="activityActivitySets"
+      />
+    </div>
+
+    <!-- back button -->
+    <BackButtonComponent />
   </div>
 </template>
 
@@ -284,8 +141,8 @@ import { useServerSettingsStore } from '@/stores/serverSettingsStore'
 // Import Notivue push
 import { push } from 'notivue'
 // Importing the components
-import ActivitySummaryComponent from '@/components/Activities/ActivitySummaryComponent.vue'
-import ActivityMapComponent from '@/components/Activities/ActivityMapComponent.vue'
+import ActivityCompareSummaryComponent from '@/components/Activities/ActivityCompareSummaryComponent.vue'
+import ActivityMapCompareComponent from '@/components/Activities/ActivityMapCompareComponent.vue'
 import ActivityMandAbovePillsComponent from '@/components/Activities/ActivityMandAbovePillsComponent.vue'
 import ActivityBellowMPillsComponent from '@/components/Activities/ActivityBellowMPillsComponent.vue'
 import LoadingComponent from '@/components/GeneralComponents/LoadingComponent.vue'
